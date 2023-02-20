@@ -6,17 +6,7 @@ import dataBase
 import pandas as pd
 
 
-arrows = {'system/img/g/next.gif': 0,
-          'system/img/g/a5.gif': 0.8,
-          'system/img/g/a3.gif': 0.6,
-          'system/img/g/a2.gif': 0.4,
-          'system/img/g/a0n.png': 0.2,
-          'system/img/g/a0s.png': -0.2,
-          'system/img/g/a1s.gif': -0.4,
-          'system/img/g/a0.gif': -0.6,
-          'system/img/g/a6.gif': -0.8,
-          'system/img/g/last.gif': 0,
-          None: 0
+arrows = {'system/img/g/a0n.png': 'П+'
           }
 
 
@@ -36,7 +26,7 @@ session = requests.Session()
 def get_page(href):
     href = 'http://pefl.ru/' + href
     html = session.post(href)
-    # html.encoding = 'windows-1251'
+    html.encoding = 'windows-1251'
     soup = BeautifulSoup(html.text, 'lxml')
     return soup
 
@@ -85,10 +75,7 @@ def parsing_players(list_players, write=False):
     time.sleep(0.2)
     for url in list_players:
         try:
-            href = 'http://pefl.ru/' + url
-            html = session.post(href)
-            html.encoding = 'windows-1251'
-            soup = BeautifulSoup(html.text, 'lxml')
+            soup = get_page(url)
             player_char = {}
             list_position = []
             list_skills = []
@@ -100,6 +87,7 @@ def parsing_players(list_players, write=False):
             player_id = player_char['id']
             n = soup.find(True, id='maininfo').findAll('td')
             player_char['age'] = int(n[1].text.split(' ')[0])
+
 
             # if write:
             #     dataBase.add_in_database(dataBase.Player, player_char)
@@ -124,12 +112,6 @@ def parsing_players(list_players, write=False):
 
             for number, i in enumerate(soup.findAll('tr', class_='back2')):
                 f = i.findAll('td')
-                try:
-                    l = i.findAll('td')[1].find(class_="arrow").find('img').get('src')
-                    print(l)
-                    # print(arrows[l])
-                except:
-                    print('vfvf')
 
                 # Блок для записи скиллов
                 if number < 9:
@@ -137,11 +119,19 @@ def parsing_players(list_players, write=False):
                     skills['id_player'] = player_id
                     skills['skill'] = f[0].text.lower()
                     skills['value'] = int(f[1].text.split(' ')[0])
+                    try:
+                        skills['arrow'] = f[1].find(class_='arrow').find('img').get('src')
+                    except:
+                        skills['arrow'] = ['None']
                     list_skills.append(skills)
                     skills = {}
                     skills['id_player'] = player_id
                     skills['skill'] = f[2].text.lower()
                     skills['value'] = int(f[3].text.split(' ')[0])
+                    try:
+                        skills['arrow'] = f[3].find(class_='arrow').find('img').get('src')
+                    except:
+                        skills['arrow'] = ['None']
                     list_skills.append(skills)
                 if number == 10:
                     pass
@@ -204,6 +194,11 @@ params = {'n': 'p',
           'r': 15715,
           'z': '217d5f5148c09688e695ad1b1936d29b'}
 
-html = session.get(url=href, params=params)
-html.encoding = 'windows-1251'
-print(html.text)
+# html = session.get(url=href)
+# html.encoding = 'windows-1251'
+# print(html.text)
+
+# f = get_page('plug.php?p=refl&t=p&j=69815&z=aed8cf6b49414783f60cb7694c28b254')
+# print(str(f.find('td', id='td6')['onmousedown']).split('&'))
+parsing_players(['plug.php?p=refl&t=p&j=69815&z=aed8cf6b49414783f60cb7694c28b254'])
+
